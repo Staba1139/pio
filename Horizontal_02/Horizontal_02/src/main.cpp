@@ -28,7 +28,7 @@ int cnt;
 
 int main() {
   
-  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_2G, sensor.G_ODR_104, sensor.A_ODR_104);
+  sensor.begin(sensor.G_SCALE_1000DPS, sensor.A_SCALE_2G, sensor.G_ODR_104, sensor.A_ODR_208);
 
   wait_us(5000000);
 
@@ -116,12 +116,14 @@ int main() {
 
     /*---END Compute Angles Using MADGWICK FILTER---*/  
 
+    printf(",%.2f,%.2f\n", roll, pitch);
     //printf(",,%.2f,%.2f,%.2f\n", roll, pitch, yaw);
+    //printf("Roll: %.2f [deg],Pitch: %.2f [deg]\n", roll, pitch);
     //printf("2: %.2f,\t%.2f,\t%.2f\n", roll_init, pitch_init, yaw_init);
     //printf("3: %.2f,\t%.2f,\t%.2f\n", gx_init, gy_init, gz_init);
 
     //wait_us(1000);
-    printf(",%.3f\n", gx);
+    //printf(",%.3f\n", gx);
     //printf("%.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", gx, gy, gz, ax, ay, az);
     wait_us(10000);
   }
