@@ -9,122 +9,169 @@
 
 LSM6DS33 sensor(p9, p10, LSM6DS33_AG_I2C_ADDR(1));
 Madgwick comAng;
-Serial serial(USBTX, USBRX, "debug", 9600);
+
 
 asm(".global _printf_float");
 
-float ax = 0.0, ay = 0.0, az = 0.0, gx = 0.0, gy = 0.0, gz = 0.0; //Sensor Value
-float mx = 0.0, my = 0.0, mz = 0.0;                               //Invalid Sensor Value
-float roll = 0.0, pitch = 0.0, yaw = 0.0;
+
+
+float accel[3] = {};        // 0: ax, 1: ay, 2: az                value of accelerometer
+float gyro[3] = {};         // 0: gx, 1: gy, 2: gz                value of gyroscope
+float o1_accel[3] = {};     // 0: o1_ax, 1: o1_ay, 2: o1_az       value of old accelerometer
+float o1_gyro[3] = {};      // 0: o1_gx, 1: o1_gy, 2: o1_gz       value of old gyroscope
+float o2_accel[3] = {};     // 0: o2_ax, 1: o2_ay, 2: o2_az       value of 2nd old accelerometer
+float o2_gyro[3] = {};      // 0: o2_gx, 1: o2_gy, 2: o2_gz       value of 2nd old gyroscope
+float i_accel[3] = {};     // 0: i_ax, 1: i_ay, 2: i_az           initial value of accelerometer
+float i_gyro[3] = {};      // 0: i_gx, 1: i_gy, 2: i_gz           initial value of gyroscope
+float t_gyro[3] = {};       // 0: t_gx, 1: t_gy, 2: t_gz          temp value of current gyroscope
+float d_gyro[3] = {};       // 0: d_gx, 1: d_gy, 2: d_gz          value of current gyroscope to display
+float mag[3] = {};          // 0: mx, 1: my, 2: mz                value of magnetoscope
+
+float angle[3] = {};        // 0: roll, 1: pitch, 2: yaw          value of angle
+float o_angle[3] = {};      // 0: o_roll, 1: o_pitch, 2: o_yaw    value of old angle
+float i_angle[3] = {};      // 0: i_roll, 1: i_pitch, 2: i_yaw    initial value of angle
+
+                              //Invalid Sensor Value
 float roll_ = 0.0, pitch_ = 0.0, yaw_ = 0.0;
-float roll_init = 0.0, pitch_init = 0.0, yaw_init = 0.0;
 
 float t_roll[aveNum], t_pitch[aveNum], t_yaw[aveNum];
-
-float ax_init = 0.0, ay_init = 0.0, az_init = 0.0, gx_init = 0.0, gy_init = 0.0, gz_init = 0.0;
 
 int i;
 int cnt;
 
 int main() {
   
-  sensor.begin(sensor.G_SCALE_1000DPS, sensor.A_SCALE_2G, sensor.G_ODR_104, sensor.A_ODR_208);
+  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_4G, sensor.G_ODR_104, sensor.A_ODR_208);
+
 
   wait_us(5000000);
 
   for(i=0; i<initCycle; i++) {
     sensor.readAll();
-    ax_init += sensor.ax;
-    ay_init += sensor.ay;
-    gx_init += sensor.gx;
-    gy_init += sensor.gy;
-    gz_init += sensor.gz;
+    i_accel[0] += sensor.ax;
+    i_accel[1] += sensor.ay;
+    i_accel[2] += sensor.az;
+    i_gyro[0] += sensor.gx;
+    i_gyro[1] += sensor.gy;
+    i_gyro[2] += sensor.gz;
 
     wait_us(100000);
 
   }
 
   //除算を避けるため，5で割る処理を0.2を乗算する処理とする
-  ax_init *= 0.2f;
-  ay_init *= 0.2f;
-  gx_init *= 0.2f;
-  gy_init *= 0.2f;
-  gz_init *= 0.2f;
+  i_accel[0] *= 0.2f;
+  i_accel[1] *= 0.2f;
+  i_accel[2] *= 0.2f;
+  i_gyro[0] *= 0.2f;
+  i_gyro[1] *= 0.2f;
+  i_gyro[2] *= 0.2f;
 
   sensor.readAll();
-  ax = sensor.ax - ax_init;
-  ay = sensor.ay - ay_init;
-  az = sensor.az ;
-  gx = sensor.gx - gx_init;
-  gy = sensor.gy - gy_init;
-  gz = sensor.gz - gz_init;
-        
-  comAng.update(gx, gy, gz, ax, ay, az, mx, my, mz);
+  o2_accel[0] = sensor.ax - i_accel[0];
+  o2_accel[1] = sensor.ay - i_accel[1];
+  o2_accel[2] = sensor.az - i_accel[2] + 1.0f;
+  o2_gyro[0] = sensor.gx - i_gyro[0];
+  o2_gyro[1] = sensor.gy - i_gyro[1];
+  o2_gyro[2] = sensor.gz - i_gyro[2];
 
+  sensor.readAll();
+  o1_accel[0] = sensor.ax - i_accel[0];
+  o1_accel[1] = sensor.ay - i_accel[1];
+  o1_accel[2] = sensor.az - i_accel[2] + 1.0f;
+  o1_gyro[0] = sensor.gx - i_gyro[0];
+  o1_gyro[1] = sensor.gy - i_gyro[1];
+  o1_gyro[2] = sensor.gz - i_gyro[2];
+
+
+  
   for(i=0;i<aveNum; i++){
-    roll_ += comAng.getRoll();
-    pitch_ += comAng.getPitch();
-    yaw_ += comAng.getYaw();
-    //wait_us(aveCycle);
+    comAng.update(gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2], mag[0], mag[1], mag[2]);
+    o_angle[0] += comAng.getRoll();
+    o_angle[1] += comAng.getPitch();
+    o_angle[2] += comAng.getYaw();
+    wait_us(aveCycle);
   }
+  
         
-  roll_init = roll_ * 0.2f;
-  pitch_init = pitch_ * 0.2f;
-  yaw_init = yaw_ * 0.2f;
-
+  i_angle[0] = o_angle[0] * 0.2f;
+  i_angle[1] = o_angle[1] * 0.2f;
+  i_angle[2] = o_angle[2] * 0.2f;
+  
 
   while(1) {
+    for(i = 0; i < 3; ++i) o_angle[i] = 0.0f;
+    for(i = 0; i < 3; ++i) angle[i] = 0.0f;
+
+
     sensor.readAll();
-    ax = sensor.ax - ax_init;
-    ay = sensor.ay - ay_init;
-    az = sensor.az ;
-    gx = sensor.gx - gx_init;
-    gy = sensor.gy - gy_init;
-    gz = sensor.gz - gz_init;
+    accel[0] = sensor.ax - i_accel[0];
+    accel[1] = sensor.ay - i_accel[1];
+    accel[2] = sensor.az - i_accel[2] + 1.0f;
+    d_gyro[0] = sensor.gx - i_gyro[0];
+    d_gyro[1] = sensor.gy - i_gyro[1];
+    d_gyro[2] = sensor.gz - i_gyro[2];
 
-    roll_ = 0.0;
-    pitch_ = 0.0;
-    yaw_ = 0.0;
+    /* ------------------------------------------------------------------- Filtering Process ------------------------------------------------------------------- */
 
-    if(yaw >180.0) {
-      yaw *=-1.0f;
+    /*---------- Apply Low-Pass Filter to Accelerometer ----------*/
+    for(i = 0; i < 3; ++i) accel[i] = (o2_accel[i] + o1_accel[i] + accel[i]) / 3.0f;
+    for(i = 0; i < 3; ++i) o2_accel[i] = o1_accel[i];
+    for(i = 0; i < 3; ++i) o1_accel[i] = accel[i];
+    /*---------- End of Apply Low-Pass Filter to Accelerometer ----------*/
+
+    /*--------- Apply High-Pass Filter to Gyroscope -----------*/
+    for(i = 0; i < 3; ++i) t_gyro[i] = d_gyro[i];
+    for(i = 0; i < 3; ++i) d_gyro[i] = (o2_gyro[i] + o1_gyro[i] + d_gyro[i]) / 3.0f;
+    for(i = 0; i < 3; ++i) gyro[i] = t_gyro[i] - d_gyro[i];
+    for(i = 0; i < 3; ++i) o2_gyro[i] = o1_gyro[i];
+    for(i = 0; i < 3; ++i) o1_gyro[i] = d_gyro[i];
+    /*--------- End of Applying High-Pass Filter to Gyroscope -----------*/
+
+    if(angle[2] >180.0) {
+      angle[2] *=-1.0f;
     }
     
-    /*---Compute Angles Using MADGWICK FILTER---*/
+    /*---------- Compute Angles Using MADGWICK FILTER ----------*/
 
     if(cnt == aveNum) {
       cnt = 0;
     }
-    comAng.updateIMU(gx, gy, gz, ax, ay, az);
-
+    comAng.updateIMU(gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2]);
+    
     t_roll[cnt] = comAng.getRoll();
     t_pitch[cnt] = comAng.getPitch();
     t_yaw[cnt] = comAng.getYaw();
     cnt++;
 
     for(i=0;i<aveNum; i++) {
-      roll_ += t_roll[i];
-      pitch_ += t_pitch[i];
-      yaw_ += t_yaw[i];
+      o_angle[0] += t_roll[i];
+      o_angle[1] += t_pitch[i];
+      o_angle[2] += t_yaw[i];
     }
         
-    roll = (roll_ * 0.2f) - roll_init;
-    pitch = (pitch_ * 0.2f) - pitch_init;
-    yaw = (yaw_ * 0.2f) - yaw_init;
+    angle[0] = (o_angle[0] * 0.2f) - i_angle[0];
+    angle[1] = (o_angle[1] * 0.2f) - i_angle[1];
+    angle[2] = (o_angle[2] * 0.2f) - i_angle[2];
 
+    
 
+    //angle[0] = comAng.getRoll();
+    //angle[1] = comAng.getPitch();
+    //angle[2] = comAng.getYaw();
 
-    /*---END Compute Angles Using MADGWICK FILTER---*/  
+    /*---------- END Compute Angles Using MADGWICK FILTER ----------*/  
 
-    printf(",%.2f,%.2f\n", roll, pitch);
-    //printf(",,%.2f,%.2f,%.2f\n", roll, pitch, yaw);
+    //printf(",%.2f,%.2f\n", angle[0], angle[1]);
+    //printf(",,%.2f,%.2f,%.2f\n", angle[0], angle[1], angle[2]);
     //printf("Roll: %.2f [deg],Pitch: %.2f [deg]\n", roll, pitch);
     //printf("2: %.2f,\t%.2f,\t%.2f\n", roll_init, pitch_init, yaw_init);
     //printf("3: %.2f,\t%.2f,\t%.2f\n", gx_init, gy_init, gz_init);
-
+    printf(", %4f, %4f, %4f, %4f\n", comAng.q0, comAng.q1, comAng.q2, comAng.q3);
     //wait_us(1000);
     //printf(",%.3f\n", gx);
-    //printf("%.2f, %.2f, %.2f, %.2f, %.2f, %.2f\n", gx, gy, gz, ax, ay, az);
+    //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2]);
+    //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", gyro[0]*0.01745329f, gyro[1]*0.01745329f, gyro[2]*0.01745329f, accel[0], accel[1], accel[2]);
     wait_us(10000);
   }
 }
