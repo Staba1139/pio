@@ -41,7 +41,7 @@ int cnt;
 
 int main() {
   
-  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_4G, sensor.G_ODR_104, sensor.A_ODR_208);
+  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_2G, sensor.G_ODR_104, sensor.A_ODR_208);
 
 
   wait_us(5000000);
@@ -67,38 +67,6 @@ int main() {
   i_gyro[1] *= 0.2f;
   i_gyro[2] *= 0.2f;
 
-  sensor.readAll();
-  o2_accel[0] = sensor.ax - i_accel[0];
-  o2_accel[1] = sensor.ay - i_accel[1];
-  o2_accel[2] = sensor.az - i_accel[2] + 1.0f;
-  o2_gyro[0] = sensor.gx - i_gyro[0];
-  o2_gyro[1] = sensor.gy - i_gyro[1];
-  o2_gyro[2] = sensor.gz - i_gyro[2];
-
-  sensor.readAll();
-  o1_accel[0] = sensor.ax - i_accel[0];
-  o1_accel[1] = sensor.ay - i_accel[1];
-  o1_accel[2] = sensor.az - i_accel[2] + 1.0f;
-  o1_gyro[0] = sensor.gx - i_gyro[0];
-  o1_gyro[1] = sensor.gy - i_gyro[1];
-  o1_gyro[2] = sensor.gz - i_gyro[2];
-
-
-  
-  for(i=0;i<aveNum; i++){
-    comAng.update(gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2], mag[0], mag[1], mag[2]);
-    o_angle[0] += comAng.getRoll();
-    o_angle[1] += comAng.getPitch();
-    o_angle[2] += comAng.getYaw();
-    wait_us(aveCycle);
-  }
-  
-        
-  i_angle[0] = o_angle[0] * 0.2f;
-  i_angle[1] = o_angle[1] * 0.2f;
-  i_angle[2] = o_angle[2] * 0.2f;
-  
-
   while(1) {
     for(i = 0; i < 3; ++i) o_angle[i] = 0.0f;
     for(i = 0; i < 3; ++i) angle[i] = 0.0f;
@@ -112,34 +80,18 @@ int main() {
     d_gyro[1] = sensor.gy - i_gyro[1];
     d_gyro[2] = sensor.gz - i_gyro[2];
 
-    /* ------------------------------------------------------------------- Filtering Process ------------------------------------------------------------------- */
-
-    /*---------- Apply Low-Pass Filter to Accelerometer ----------*/
-    for(i = 0; i < 3; ++i) accel[i] = (o2_accel[i] + o1_accel[i] + accel[i]) / 3.0f;
-    for(i = 0; i < 3; ++i) o2_accel[i] = o1_accel[i];
-    for(i = 0; i < 3; ++i) o1_accel[i] = accel[i];
-    /*---------- End of Apply Low-Pass Filter to Accelerometer ----------*/
-
-    /*--------- Apply High-Pass Filter to Gyroscope -----------*/
-    for(i = 0; i < 3; ++i) t_gyro[i] = d_gyro[i];
-    for(i = 0; i < 3; ++i) d_gyro[i] = (o2_gyro[i] + o1_gyro[i] + d_gyro[i]) / 3.0f;
-    for(i = 0; i < 3; ++i) gyro[i] = t_gyro[i] - d_gyro[i];
-    for(i = 0; i < 3; ++i) o2_gyro[i] = o1_gyro[i];
-    for(i = 0; i < 3; ++i) o1_gyro[i] = d_gyro[i];
-    /*--------- End of Applying High-Pass Filter to Gyroscope -----------*/
-
-    if(angle[2] >180.0) {
-      angle[2] *=-1.0f;
+    for(i = 0; i < 3; ++i) {
+      if(std::abs(d_gyro[i] < 0.05f)) {
+        d_gyro[i] = 0.0f;
+      } 
     }
 
-    /* ------------------------------------------------------------------- End of Filtering Process ------------------------------------------------------------------- */    
-    
     /*---------- Compute Angles Using MADGWICK FILTER ----------*/
 
     if(cnt == aveNum) {
       cnt = 0;
     }
-    comAng.updateIMU(gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2]);
+    comAng.updateIMU(d_gyro[0], d_gyro[1], d_gyro[2], accel[0], accel[1], accel[2]);
     
     t_roll[cnt] = comAng.getRoll();
     t_pitch[cnt] = comAng.getPitch();
@@ -152,11 +104,13 @@ int main() {
       o_angle[2] += t_yaw[i];
     }
         
-    angle[0] = (o_angle[0] * 0.2f) - i_angle[0];
-    angle[1] = (o_angle[1] * 0.2f) - i_angle[1];
-    angle[2] = (o_angle[2] * 0.2f) - i_angle[2];
+    angle[0] = (o_angle[0] * 0.2f);
+    angle[1] = (o_angle[1] * 0.2f);
+    angle[2] = (o_angle[2] * 0.2f);
 
-    
+    if(angle[2] >180.0) {
+      angle[2] *=-1.0f;
+    }
 
     //angle[0] = comAng.getRoll();
     //angle[1] = comAng.getPitch();
@@ -164,15 +118,15 @@ int main() {
 
     /*---------- END Compute Angles Using MADGWICK FILTER ----------*/  
 
-    //printf(",%.2f,%.2f\n", angle[0], angle[1]);
+    printf(",%.2f,%.2f\n", angle[0], angle[1]);
     //printf(",,%.2f,%.2f,%.2f\n", angle[0], angle[1], angle[2]);
     //printf("Roll: %.2f [deg],Pitch: %.2f [deg]\n", roll, pitch);
     //printf("2: %.2f,\t%.2f,\t%.2f\n", roll_init, pitch_init, yaw_init);
     //printf("3: %.2f,\t%.2f,\t%.2f\n", gx_init, gy_init, gz_init);
-    printf(", %4f, %4f, %4f, %4f\n", comAng.q0, comAng.q1, comAng.q2, comAng.q3);
+    //printf(", %4f, %4f, %4f, %4f\n", comAng.q0, comAng.q1, comAng.q2, comAng.q3);
     //wait_us(1000);
     //printf(",%.3f\n", gx);
-    //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2]);
+    //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", d_gyro[0], d_gyro[1], d_gyro[2], accel[0], accel[1], accel[2]);
     //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", gyro[0]*0.01745329f, gyro[1]*0.01745329f, gyro[2]*0.01745329f, accel[0], accel[1], accel[2]);
     wait_us(10000);
   }

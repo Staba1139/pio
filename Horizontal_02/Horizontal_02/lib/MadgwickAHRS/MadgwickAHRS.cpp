@@ -26,8 +26,8 @@
 //-------------------------------------------------------------------------------------------
 // Definitions
 
-#define sampleFreqDef   100.0f          // sample frequency in Hz
-#define betaDef         0.05f            // 2 * proportional gain 0.1 - 0.5 - 5
+#define sampleFreqDef   200.0f          // sample frequency in Hz
+#define betaDef         0.8f            // 2 * proportional gain 0.1 - 0.5 - 5
 
 
 //============================================================================================
@@ -168,7 +168,7 @@ void Madgwick::updateIMU(float gx, float gy, float gz, float ax, float ay, float
     qDot3 = 0.5f * (q0 * gy - q1 * gz + q3 * gx);
     qDot4 = 0.5f * (q0 * gz + q1 * gy - q2 * gx);
 
-/*
+
 
     // Compute feedback only if accelerometer measurement valid (avoids NaN in accelerometer normalisation)
     if(!((ax == 0.0f) && (ay == 0.0f) && (az == 0.0f))) {
@@ -214,7 +214,7 @@ void Madgwick::updateIMU(float gx, float gy, float gz, float ax, float ay, float
         qDot4 -= beta * s3;
      }
 
-*/
+
 
     // Integrate rate of change of quaternion to yield quaternion
     q0 += qDot1 * invSampleFreq;
