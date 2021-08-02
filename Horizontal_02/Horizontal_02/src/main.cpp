@@ -38,6 +38,7 @@ float t_roll[aveNum], t_pitch[aveNum], t_yaw[aveNum];
 
 int i;
 int cnt;
+int whole_count;
 
 int main() {
   
@@ -81,7 +82,7 @@ int main() {
     d_gyro[2] = sensor.gz - i_gyro[2];
 
     for(i = 0; i < 3; ++i) {
-      if(std::abs(d_gyro[i] < 0.05f)) {
+      if(std::abs(d_gyro[i] < 0.11f)) {
         d_gyro[i] = 0.0f;
       } 
     }
@@ -108,8 +109,12 @@ int main() {
     angle[1] = (o_angle[1] * 0.2f);
     angle[2] = (o_angle[2] * 0.2f);
 
-    if(angle[2] >180.0) {
+    if(angle[2] >180.0f) {
       angle[2] *=-1.0f;
+    }
+
+    for(i = 0; i < 3; ++i) {
+      if(std::abs(angle[i]) < 0.3f) angle[i] = 0.0f;
     }
 
     //angle[0] = comAng.getRoll();
@@ -118,7 +123,11 @@ int main() {
 
     /*---------- END Compute Angles Using MADGWICK FILTER ----------*/  
 
-    printf(",%.2f,%.2f\n", angle[0], angle[1]);
+    if(whole_count >= 10) {
+      printf(",%.2f,%.2f\n", angle[0], angle[1]);
+      whole_count = 0;
+    }
+    
     //printf(",,%.2f,%.2f,%.2f\n", angle[0], angle[1], angle[2]);
     //printf("Roll: %.2f [deg],Pitch: %.2f [deg]\n", roll, pitch);
     //printf("2: %.2f,\t%.2f,\t%.2f\n", roll_init, pitch_init, yaw_init);
@@ -128,6 +137,7 @@ int main() {
     //printf(",%.3f\n", gx);
     //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", d_gyro[0], d_gyro[1], d_gyro[2], accel[0], accel[1], accel[2]);
     //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", gyro[0]*0.01745329f, gyro[1]*0.01745329f, gyro[2]*0.01745329f, accel[0], accel[1], accel[2]);
+    whole_count++;
     wait_us(10000);
   }
 }
