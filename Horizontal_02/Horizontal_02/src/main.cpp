@@ -13,6 +13,9 @@ Madgwick comAng;
 
 asm(".global _printf_float");
 
+PwmOut motor1(p26);
+PwmOut motor2(p25);
+const float throttle_low = 0.001f;
 
 
 float accel[3] = {};        // 0: ax, 1: ay, 2: az                value of accelerometer
@@ -30,6 +33,8 @@ float mag[3] = {};          // 0: mx, 1: my, 2: mz                value of magne
 float angle[3] = {};        // 0: roll, 1: pitch, 2: yaw          value of angle
 float o_angle[3] = {};      // 0: o_roll, 1: o_pitch, 2: o_yaw    value of old angle
 float i_angle[3] = {};      // 0: i_roll, 1: i_pitch, 2: i_yaw    initial value of angle
+float reference_angle[3] = {};      // 0: r_roll, 1: r_pitch, 2: r_yaw    reference value of angle
+float calc_angle[3] = {};      // 0: r_roll, 1: r_pitch, 2: r_yaw    calc value of angle
 
                               //Invalid Sensor Value
 float roll_ = 0.0, pitch_ = 0.0, yaw_ = 0.0;
@@ -39,14 +44,22 @@ float t_roll[aveNum], t_pitch[aveNum], t_yaw[aveNum];
 int i;
 int cnt;
 int whole_count;
+float pulsewidth_calc[2] = {1200.0f, 1200.0f};
 
 int main() {
   
+  float pwmval = 0.004f;
   sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_2G, sensor.G_ODR_104, sensor.A_ODR_208);
 
+    motor1.period(pwmval);
+    motor2.period(pwmval);
+    
+    motor1.pulsewidth(throttle_low);
+    motor2.pulsewidth(throttle_low);
 
-  wait_us(5000000);
+  wait_us(8000000);
 
+  /*
   for(i=0; i<initCycle; i++) {
     sensor.readAll();
     i_accel[0] += sensor.ax;
@@ -67,6 +80,8 @@ int main() {
   i_gyro[0] *= 0.2f;
   i_gyro[1] *= 0.2f;
   i_gyro[2] *= 0.2f;
+  */
+
 
   while(1) {
     for(i = 0; i < 3; ++i) o_angle[i] = 0.0f;
@@ -76,7 +91,7 @@ int main() {
     sensor.readAll();
     accel[0] = sensor.ax - i_accel[0];
     accel[1] = sensor.ay - i_accel[1];
-    accel[2] = sensor.az - i_accel[2] + 1.0f;
+    accel[2] = sensor.az - i_accel[2];
     d_gyro[0] = sensor.gx - i_gyro[0];
     d_gyro[1] = sensor.gy - i_gyro[1];
     d_gyro[2] = sensor.gz - i_gyro[2];
@@ -123,11 +138,24 @@ int main() {
 
     /*---------- END Compute Angles Using MADGWICK FILTER ----------*/  
 
-    if(whole_count >= 10) {
-      printf(",%.2f,%.2f\n", angle[0], angle[1]);
+
+
+    calc_angle[1] = angle[1] - reference_angle[1];
+    pulsewidth_calc[0] = 1.5f * calc_angle[1] + 1300.0f;
+    pulsewidth_calc[1] = -1.5f * calc_angle[1] + 1304.0f;
+    for(i = 0; i < 2; ++i) {
+      if(pulsewidth_calc[i] < 1000.0f) pulsewidth_calc[i] = 1000.0f;
+      if(pulsewidth_calc[i] > 1800.0f) pulsewidth_calc[i] = 1800.0f;
+
+    }
+    motor1.pulsewidth_us((int)pulsewidth_calc[0]);
+    motor2.pulsewidth_us((int)pulsewidth_calc[1]);
+
+    if(whole_count >= 5) {
+      printf(",%.2f,%.2f, %.2f\n", angle[1], pulsewidth_calc[0], pulsewidth_calc[1]);
       whole_count = 0;
     }
-    
+
     //printf(",,%.2f,%.2f,%.2f\n", angle[0], angle[1], angle[2]);
     //printf("Roll: %.2f [deg],Pitch: %.2f [deg]\n", roll, pitch);
     //printf("2: %.2f,\t%.2f,\t%.2f\n", roll_init, pitch_init, yaw_init);
