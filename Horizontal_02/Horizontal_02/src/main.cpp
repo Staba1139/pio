@@ -2,6 +2,7 @@
 #include <LSM6DS33.h>
 #include <MadgwickAHRS.h>
 #include <PIDcontroller.h>
+#include <ParametricEQ.h>
 
 #define aveNum      5
 #define initCycle   5
@@ -9,6 +10,7 @@
 
 LSM6DS33 sensor(p9, p10, LSM6DS33_AG_I2C_ADDR(1));
 Madgwick comAng;
+ParametricEQ myEQ;
 
 
 asm(".global _printf_float");
@@ -49,7 +51,7 @@ float pulsewidth_calc[2] = {1200.0f, 1200.0f};
 int main() {
   
   float pwmval = 0.004f;
-  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_2G, sensor.G_ODR_104, sensor.A_ODR_208);
+  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_2G, sensor.G_ODR_52_BW_16, sensor.A_ODR_52);
 
     motor1.period(pwmval);
     motor2.period(pwmval);
@@ -59,7 +61,7 @@ int main() {
 
   wait_us(8000000);
 
-  /*
+  //オフセット除去
   for(i=0; i<initCycle; i++) {
     sensor.readAll();
     i_accel[0] += sensor.ax;
@@ -80,7 +82,10 @@ int main() {
   i_gyro[0] *= 0.2f;
   i_gyro[1] *= 0.2f;
   i_gyro[2] *= 0.2f;
-  */
+  
+  myEQ.set_Type(LowPass);
+  myEQ.set_F0_Hz(100);
+
 
 
   while(1) {
@@ -91,15 +96,13 @@ int main() {
     sensor.readAll();
     accel[0] = sensor.ax - i_accel[0];
     accel[1] = sensor.ay - i_accel[1];
-    accel[2] = sensor.az - i_accel[2];
+    accel[2] = sensor.az;
     d_gyro[0] = sensor.gx - i_gyro[0];
     d_gyro[1] = sensor.gy - i_gyro[1];
     d_gyro[2] = sensor.gz - i_gyro[2];
 
-    for(i = 0; i < 3; ++i) {
-      if(std::abs(d_gyro[i] < 0.11f)) {
-        d_gyro[i] = 0.0f;
-      } 
+    for(i=0; i<3;++i) {
+      gyro[i] = myEQ.filter(d_gyro[i]);
     }
 
     /*---------- Compute Angles Using MADGWICK FILTER ----------*/
@@ -107,7 +110,7 @@ int main() {
     if(cnt == aveNum) {
       cnt = 0;
     }
-    comAng.updateIMU(d_gyro[0], d_gyro[1], d_gyro[2], accel[0], accel[1], accel[2]);
+    comAng.updateIMU(gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2]);
     
     t_roll[cnt] = comAng.getRoll();
     t_pitch[cnt] = comAng.getPitch();
@@ -127,14 +130,13 @@ int main() {
     if(angle[2] >180.0f) {
       angle[2] *=-1.0f;
     }
+    //angle[0] = comAng.getRoll();
+    //angle[1] = comAng.getPitch();
+    //angle[2] = comAng.getYaw();
 
     for(i = 0; i < 3; ++i) {
       if(std::abs(angle[i]) < 0.3f) angle[i] = 0.0f;
     }
-
-    //angle[0] = comAng.getRoll();
-    //angle[1] = comAng.getPitch();
-    //angle[2] = comAng.getYaw();
 
     /*---------- END Compute Angles Using MADGWICK FILTER ----------*/  
 
@@ -151,8 +153,11 @@ int main() {
     motor1.pulsewidth_us((int)pulsewidth_calc[0]);
     motor2.pulsewidth_us((int)pulsewidth_calc[1]);
 
-    if(whole_count >= 5) {
-      printf(",%.2f,%.2f, %.2f\n", angle[1], pulsewidth_calc[0], pulsewidth_calc[1]);
+    if(whole_count >= 1) {
+      //printf(",%.2f,%.2f, %.2f\n", angle[1], pulsewidth_calc[0], pulsewidth_calc[1]);
+      printf(",,%.2f,%.2f,%.2f\n", angle[0], angle[1], angle[2]);
+      //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", d_gyro[0], d_gyro[1], d_gyro[2], accel[0], accel[1], accel[2]);
+      //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", sensor.ax, sensor.ay, sensor.az, sensor.gx, sensor.gy, sensor.gz);
       whole_count = 0;
     }
 
