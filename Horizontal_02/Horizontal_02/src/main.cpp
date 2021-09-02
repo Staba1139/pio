@@ -10,7 +10,8 @@
 
 LSM6DS33 sensor(p9, p10, LSM6DS33_AG_I2C_ADDR(1));
 Madgwick comAng;
-ParametricEQ myEQ;
+ParametricEQ myEQ1;
+ParametricEQ myEQ2;
 
 
 asm(".global _printf_float");
@@ -30,6 +31,7 @@ float i_accel[3] = {};     // 0: i_ax, 1: i_ay, 2: i_az           initial value 
 float i_gyro[3] = {};      // 0: i_gx, 1: i_gy, 2: i_gz           initial value of gyroscope
 float t_gyro[3] = {};       // 0: t_gx, 1: t_gy, 2: t_gz          temp value of current gyroscope
 float d_gyro[3] = {};       // 0: d_gx, 1: d_gy, 2: d_gz          value of current gyroscope to display
+float d_accel[3] = {};
 float mag[3] = {};          // 0: mx, 1: my, 2: mz                value of magnetoscope
 
 float angle[3] = {};        // 0: roll, 1: pitch, 2: yaw          value of angle
@@ -40,6 +42,7 @@ float calc_angle[3] = {};      // 0: r_roll, 1: r_pitch, 2: r_yaw    calc value 
 
                               //Invalid Sensor Value
 float roll_ = 0.0, pitch_ = 0.0, yaw_ = 0.0;
+float temp_1;
 
 float t_roll[aveNum], t_pitch[aveNum], t_yaw[aveNum];
 
@@ -51,7 +54,7 @@ float pulsewidth_calc[2] = {1200.0f, 1200.0f};
 int main() {
   
   float pwmval = 0.004f;
-  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_2G, sensor.G_ODR_52_BW_16, sensor.A_ODR_52);
+  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_4G, sensor.G_ODR_104, sensor.A_ODR_104);
 
     motor1.period(pwmval);
     motor2.period(pwmval);
@@ -60,6 +63,9 @@ int main() {
     motor2.pulsewidth(throttle_low);
 
   wait_us(8000000);
+
+  //-----------------------------------------Sensor Pre-Process-----------------------------------------------------------------------
+  
 
   //オフセット除去
   for(i=0; i<initCycle; i++) {
@@ -83,10 +89,14 @@ int main() {
   i_gyro[1] *= 0.2f;
   i_gyro[2] *= 0.2f;
   
-  myEQ.set_Type(LowPass);
-  myEQ.set_F0_Hz(100);
+
+  //Low-Pass Filter for Gyroscope
+
+  myEQ1.set_Type(HighPass);
+  myEQ1.set_F0_Hz(2);
 
 
+ //-----------------------------------------End of Sensor Pre-Process-----------------------------------------------------------------------
 
   while(1) {
     for(i = 0; i < 3; ++i) o_angle[i] = 0.0f;
@@ -94,17 +104,43 @@ int main() {
 
 
     sensor.readAll();
-    accel[0] = sensor.ax - i_accel[0];
-    accel[1] = sensor.ay - i_accel[1];
-    accel[2] = sensor.az;
+
+    //Smoosing Accelerometer Value
+    for(i=0; i<3; i++) {
+      d_accel[i] = 0.0f;
+    }
+
+    for(i=0; i<3; i++) {
+      sensor.readAccel();
+      d_accel[0] += sensor.ax - i_accel[0];
+      d_accel[1] += sensor.ay - i_accel[1];
+      d_accel[2] += sensor.az;
+    }
+    accel[0] = d_accel[0] / 3;
+    accel[1] = d_accel[1] / 3;
+    accel[2] = d_accel[2] / 3;
+
+
     d_gyro[0] = sensor.gx - i_gyro[0];
     d_gyro[1] = sensor.gy - i_gyro[1];
     d_gyro[2] = sensor.gz - i_gyro[2];
 
+
+    // Executing High-Pass Filter for Gyroscope
+
     for(i=0; i<3;++i) {
-      gyro[i] = myEQ.filter(d_gyro[i]);
+      gyro[i] = myEQ1.filter(d_gyro[i]);
+
     }
 
+/*
+    accel[0] = sensor.ax - i_accel[0];
+    accel[1] = sensor.ay - i_accel[1];
+    accel[2] = sensor.az;
+    gyro[0] = sensor.gx - i_gyro[0];
+    gyro[1] = sensor.gy - i_gyro[1];
+    gyro[2] = sensor.gz - i_gyro[2];
+*/
     /*---------- Compute Angles Using MADGWICK FILTER ----------*/
 
     if(cnt == aveNum) {
@@ -130,13 +166,15 @@ int main() {
     if(angle[2] >180.0f) {
       angle[2] *=-1.0f;
     }
+
+    //comAng.updateIMU(gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2]);
     //angle[0] = comAng.getRoll();
     //angle[1] = comAng.getPitch();
     //angle[2] = comAng.getYaw();
 
-    for(i = 0; i < 3; ++i) {
-      if(std::abs(angle[i]) < 0.3f) angle[i] = 0.0f;
-    }
+//    for(i = 0; i < 3; ++i) {
+//      if(std::abs(angle[i]) < 0.5f) angle[i] = 0.0f;
+//    }
 
     /*---------- END Compute Angles Using MADGWICK FILTER ----------*/  
 
@@ -153,11 +191,16 @@ int main() {
     motor1.pulsewidth_us((int)pulsewidth_calc[0]);
     motor2.pulsewidth_us((int)pulsewidth_calc[1]);
 
-    if(whole_count >= 1) {
+    sensor.readTemp();
+    temp_1 = sensor.temperature_c;
+
+    if(whole_count >= 2) {
       //printf(",%.2f,%.2f, %.2f\n", angle[1], pulsewidth_calc[0], pulsewidth_calc[1]);
-      printf(",,%.2f,%.2f,%.2f\n", angle[0], angle[1], angle[2]);
-      //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", d_gyro[0], d_gyro[1], d_gyro[2], accel[0], accel[1], accel[2]);
+      printf(",%.2f,%.2f\n", angle[0], angle[1]);
+      //printf(",%.4f,%.4f,%.4f\n", accel[0], accel[1], accel[2]);
+      //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", d_gyro[0], d_gyro[1], d_gyro[2], d_accel[0], d_accel[1], d_accel[2]);
       //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", sensor.ax, sensor.ay, sensor.az, sensor.gx, sensor.gy, sensor.gz);
+      //printf("%.2f\n", temp_1);
       whole_count = 0;
     }
 
@@ -171,6 +214,6 @@ int main() {
     //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", d_gyro[0], d_gyro[1], d_gyro[2], accel[0], accel[1], accel[2]);
     //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", gyro[0]*0.01745329f, gyro[1]*0.01745329f, gyro[2]*0.01745329f, accel[0], accel[1], accel[2]);
     whole_count++;
-    wait_us(10000);
+    wait_us(1000);
   }
 }
