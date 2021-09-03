@@ -27,7 +27,7 @@
 // Definitions
 
 #define sampleFreqDef   100.0f          // sample frequency in Hz
-#define betaDef         0.3f            // 2 * proportional gain 0.1 - 0.5 - 5
+#define betaDef         0.1f            // 2 * proportional gain 0.1 - 0.5 - 5
 
 
 //============================================================================================
@@ -161,6 +161,11 @@ void Madgwick::updateIMU(float gx, float gy, float gz, float ax, float ay, float
     gx *= 0.0174533f;
     gy *= 0.0174533f;
     gz *= 0.0174533f;
+
+    // Convert accelerometer g to meter/sec^2
+    ax *= 9.80665f;
+    ay *= 9.80665f;
+    az *= 9.80665f;
 
     // Rate of change of quaternion from gyroscope
     qDot1 = 0.5f * (-q1 * gx - q2 * gy + q3 * gz);

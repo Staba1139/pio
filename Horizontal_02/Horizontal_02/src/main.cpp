@@ -2,7 +2,6 @@
 #include <LSM6DS33.h>
 #include <MadgwickAHRS.h>
 #include <PIDcontroller.h>
-#include <ParametricEQ.h>
 
 #define aveNum      5
 #define initCycle   5
@@ -10,8 +9,6 @@
 
 LSM6DS33 sensor(p9, p10, LSM6DS33_AG_I2C_ADDR(1));
 Madgwick comAng;
-ParametricEQ myEQ1;
-ParametricEQ myEQ2;
 
 
 asm(".global _printf_float");
@@ -54,7 +51,7 @@ float pulsewidth_calc[2] = {1200.0f, 1200.0f};
 int main() {
   
   float pwmval = 0.004f;
-  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_4G, sensor.G_ODR_104, sensor.A_ODR_104);
+  sensor.begin(sensor.G_SCALE_245DPS, sensor.A_SCALE_2G, sensor.G_ODR_104, sensor.A_ODR_104);
 
     motor1.period(pwmval);
     motor2.period(pwmval);
@@ -88,12 +85,6 @@ int main() {
   i_gyro[0] *= 0.2f;
   i_gyro[1] *= 0.2f;
   i_gyro[2] *= 0.2f;
-  
-
-  //Low-Pass Filter for Gyroscope
-
-  myEQ1.set_Type(HighPass);
-  myEQ1.set_F0_Hz(2);
 
 
  //-----------------------------------------End of Sensor Pre-Process-----------------------------------------------------------------------
@@ -104,6 +95,7 @@ int main() {
 
 
     sensor.readAll();
+
 
     //Smoosing Accelerometer Value
     for(i=0; i<3; i++) {
@@ -120,28 +112,16 @@ int main() {
     accel[1] = d_accel[1] / 3;
     accel[2] = d_accel[2] / 3;
 
-
-    d_gyro[0] = sensor.gx - i_gyro[0];
-    d_gyro[1] = sensor.gy - i_gyro[1];
-    d_gyro[2] = sensor.gz - i_gyro[2];
-
-
-    // Executing High-Pass Filter for Gyroscope
-
-    for(i=0; i<3;++i) {
-      gyro[i] = myEQ1.filter(d_gyro[i]);
-
-    }
-
-/*
-    accel[0] = sensor.ax - i_accel[0];
-    accel[1] = sensor.ay - i_accel[1];
-    accel[2] = sensor.az;
+    //accel[0] = sensor.ax - i_accel[0];
+    //accel[1] = sensor.ay - i_accel[1];
+    //accel[2] = sensor.az;
     gyro[0] = sensor.gx - i_gyro[0];
     gyro[1] = sensor.gy - i_gyro[1];
     gyro[2] = sensor.gz - i_gyro[2];
-*/
+
     /*---------- Compute Angles Using MADGWICK FILTER ----------*/
+
+
 
     if(cnt == aveNum) {
       cnt = 0;
@@ -159,9 +139,9 @@ int main() {
       o_angle[2] += t_yaw[i];
     }
         
-    angle[0] = (o_angle[0] * 0.2f);
-    angle[1] = (o_angle[1] * 0.2f);
-    angle[2] = (o_angle[2] * 0.2f);
+    angle[0] = (o_angle[0] / aveNum);
+    angle[1] = (o_angle[1] / aveNum);
+    angle[2] = (o_angle[2] / aveNum);
 
     if(angle[2] >180.0f) {
       angle[2] *=-1.0f;
@@ -179,7 +159,7 @@ int main() {
     /*---------- END Compute Angles Using MADGWICK FILTER ----------*/  
 
 
-
+/*--------------- PID Control---------------------------------------*/
     calc_angle[1] = angle[1] - reference_angle[1];
     pulsewidth_calc[0] = 1.5f * calc_angle[1] + 1300.0f;
     pulsewidth_calc[1] = -1.5f * calc_angle[1] + 1304.0f;
@@ -190,6 +170,8 @@ int main() {
     }
     motor1.pulsewidth_us((int)pulsewidth_calc[0]);
     motor2.pulsewidth_us((int)pulsewidth_calc[1]);
+
+/*--------------- End of PID Control---------------------------------------*/
 
     sensor.readTemp();
     temp_1 = sensor.temperature_c;
@@ -214,6 +196,6 @@ int main() {
     //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", d_gyro[0], d_gyro[1], d_gyro[2], accel[0], accel[1], accel[2]);
     //printf(", %.4f, %.4f, %.4f, %.4f, %.4f, %.4f\n", gyro[0]*0.01745329f, gyro[1]*0.01745329f, gyro[2]*0.01745329f, accel[0], accel[1], accel[2]);
     whole_count++;
-    wait_us(1000);
+    //wait_us(1000);
   }
 }
