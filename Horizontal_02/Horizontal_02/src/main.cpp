@@ -20,20 +20,12 @@ const float throttle_low = 0.001f;
 
 float accel[3] = {};        // 0: ax, 1: ay, 2: az                value of accelerometer
 float gyro[3] = {};         // 0: gx, 1: gy, 2: gz                value of gyroscope
-float o1_accel[3] = {};     // 0: o1_ax, 1: o1_ay, 2: o1_az       value of old accelerometer
-float o1_gyro[3] = {};      // 0: o1_gx, 1: o1_gy, 2: o1_gz       value of old gyroscope
-float o2_accel[3] = {};     // 0: o2_ax, 1: o2_ay, 2: o2_az       value of 2nd old accelerometer
-float o2_gyro[3] = {};      // 0: o2_gx, 1: o2_gy, 2: o2_gz       value of 2nd old gyroscope
 float i_accel[3] = {};     // 0: i_ax, 1: i_ay, 2: i_az           initial value of accelerometer
 float i_gyro[3] = {};      // 0: i_gx, 1: i_gy, 2: i_gz           initial value of gyroscope
-float t_gyro[3] = {};       // 0: t_gx, 1: t_gy, 2: t_gz          temp value of current gyroscope
-float d_gyro[3] = {};       // 0: d_gx, 1: d_gy, 2: d_gz          value of current gyroscope to display
 float d_accel[3] = {};
-float mag[3] = {};          // 0: mx, 1: my, 2: mz                value of magnetoscope
 
 float angle[3] = {};        // 0: roll, 1: pitch, 2: yaw          value of angle
 float o_angle[3] = {};      // 0: o_roll, 1: o_pitch, 2: o_yaw    value of old angle
-float i_angle[3] = {};      // 0: i_roll, 1: i_pitch, 2: i_yaw    initial value of angle
 float reference_angle[3] = {};      // 0: r_roll, 1: r_pitch, 2: r_yaw    reference value of angle
 float calc_angle[3] = {};      // 0: r_roll, 1: r_pitch, 2: r_yaw    calc value of angle
 
