@@ -46,6 +46,7 @@ void Sensor::Preprocess(void) {
 void Sensor::calcAngle() {
 
     //--------------------------- Values of Accelerometer and Gyroscope
+    for(i = 0; i < 3; ++i) o_angle[i] = 0.0f;
     for(i = 0; i < 3; ++i) angle[i] = 0.0f;
     LSM6DS33::readAll();
     for(i = 0; i < 3; ++i) d_accel[i] = 0.0f;
