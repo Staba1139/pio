@@ -31,8 +31,13 @@ int main() {
 
   while(1) {
     // Calcurate Angle
+    angleTimer = angle_timer.read_us();
+    printf("%d\n", angleTimer);
+    
     angle.calcAngle();
     angleTimer = angle_timer.read_us();
+    printf("%d\n", angleTimer);
+
 
     // PID Process (float Kp, float Ki, float Kd, float tSample, float inputMin, float inputMax, float outputMin, float outputMax, float setpoint)
     PID_c.PID_setParameter(1.0f, 0.0f, 0.0f, 0.01f, -45.00f, 45.00f, -40.0f, 40.0f, 0.01f);
