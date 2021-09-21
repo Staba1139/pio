@@ -6,18 +6,7 @@
 
 
 Sensor::Sensor() : LSM6DS33(p9, p10, LSM6DS33_AG_I2C_ADDR(1)) , Madgwick(){
-    
-    pwmval = 0.004f;
-    PwmOut m1(p26);
-    PwmOut m2(p25);
-    throttle_low = 0.001f;
     LSM6DS33::begin(LSM6DS33::G_SCALE_245DPS, LSM6DS33::A_SCALE_2G, LSM6DS33::G_ODR_104, LSM6DS33::A_ODR_104);
-
-    m1.period(pwmval);
-    m2.period(pwmval);
-    m1.pulsewidth(throttle_low);
-    m2.pulsewidth(throttle_low);
-
 }
 
 void Sensor::Preprocess(void) {

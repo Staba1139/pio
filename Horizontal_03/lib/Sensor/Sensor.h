@@ -8,8 +8,6 @@
 
 class Sensor: public LSM6DS33, public Madgwick {
     private:
-        float pwmval;
-        float throttle_low;
         float d_accel[3] = {};
         int i;
         int cnt;
