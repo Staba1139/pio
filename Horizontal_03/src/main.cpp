@@ -1,10 +1,13 @@
 #include <mbed.h>
 #include <Sensor.h>
 #include <PIDIO.h>
+#include <ESCout.h>
 
 Sensor angle;
 PIDIO PID_c;
 Timer angle_timer;
+ESCout1 ESC1_output;
+ESCout2 ESC2_output;
 
 asm(".global _printf_float");
 
@@ -17,7 +20,7 @@ float pwmval;
 
 int main() {
   angle.Preprocess();
-
+/*
     PwmOut m1(p26);
     PwmOut m2(p25);
     throttle_low = 0.001f;
@@ -26,7 +29,7 @@ int main() {
     m2.period(pwmval);
     m1.pulsewidth(throttle_low);
     m2.pulsewidth(throttle_low);
-
+*/
   angle_timer.start();
 
   while(1) {
@@ -42,10 +45,13 @@ int main() {
     // PID Process (float Kp, float Ki, float Kd, float tSample, float inputMin, float inputMax, float outputMin, float outputMax, float setpoint)
     PID_c.PID_setParameter(1.0f, 0.0f, 0.0f, 0.01f, -45.00f, 45.00f, -40.0f, 40.0f, 0.01f);
     PID_value = PID_c.PID_velocity_process(angle.angle[1]);
+
+    ESC1_output.ESC1_output(PID_value);
+    ESC2_output.ESC2_output(PID_value);
+/*
     m1.pulsewidth_us((int)(throttle + PID_value));
     m2.pulsewidth_us((int)(throttle - PID_value));
-
-
+*/
     if(whole_count >= 2) {
       printf(",%d,%.2f,%.2f\n", angleTimer, angle.angle[0], angle.angle[1]);
       whole_count = 0;
