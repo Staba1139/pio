@@ -12,7 +12,7 @@ Sensor::Sensor() : LSM6DS33(p9, p10, LSM6DS33_AG_I2C_ADDR(1)) , Madgwick(){
 void Sensor::Preprocess(void) {
     
     wait_us(8000000);
-
+/*
     for (i = 0; i < initCycle; i++) {
         LSM6DS33::readAll();
         i_accel[0] += LSM6DS33::ax;
@@ -30,6 +30,7 @@ void Sensor::Preprocess(void) {
     i_gyro[0] *= 0.2f;
     i_gyro[1] *= 0.2f;
     i_gyro[2] *= 0.2f;
+*/
 }
 
 void Sensor::calcAngle() {
