@@ -34,18 +34,18 @@ int main() {
 
   while(1) {
     // Calcurate Angle
-    angleTimer = angle_timer.read_us();
-    printf("%d\n", angleTimer);
+    //angleTimer = angle_timer.read_us();
+    //printf("%d\n", angleTimer);
     
     angle.calcAngle();
     angleTimer = angle_timer.read_us();
-    printf("%d\n", angleTimer);
+    //printf("%d\n", angleTimer);
 
 
     // PID Process (float Kp, float Ki, float Kd, float tSample, float inputMin, float inputMax, float outputMin, float outputMax, float setpoint)
-    PID_c.PID_setParameter(1.0f, 1.0f, 0.5f, 0.01f, -45.00f, 45.00f, -40.0f, 40.0f, 0.01f);
+    PID_c.PID_setParameter(2.55f, 0.0f, 0.0f, 0.001f, -30.00f, 30.00f, -40.0f, 40.0f, 0.0f);
     PID_value = PID_c.PID_velocity_process(angle.angle[1]);
-    if(PID_value%4 >1) PID_value -= PID_value%4;
+    if((int)PID_value%4 >1) PID_value -= (int)PID_value%4;
 
     ESC1_output.ESC1_output(PID_value);
     ESC2_output.ESC2_output(PID_value);
@@ -60,6 +60,6 @@ int main() {
 
     if(angleTimer >=4294967294) angleTimer = 0;
     whole_count++;
-    wait_us(1000);
+    //wait_us(100);
   }
 }
