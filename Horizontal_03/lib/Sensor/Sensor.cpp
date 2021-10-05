@@ -31,6 +31,12 @@ void Sensor::Preprocess(void) {
     i_gyro[1] *= 0.2f;
     i_gyro[2] *= 0.2f;
 
+    
+    Madgwick::updateIMU(i_gyro[0], i_gyro[1], i_gyro[2], i_accel[0], i_accel[1], i_accel[2]);
+    i_angle[0] = Madgwick::getRoll();
+    i_angle[1] = Madgwick::getPitch();
+    i_angle[2] = Madgwick::getYaw();
+
 }
 
 void Sensor::calcAngle() {
@@ -41,6 +47,7 @@ void Sensor::calcAngle() {
     LSM6DS33::readAll();
     for(i = 0; i < 3; ++i) d_accel[i] = 0.0f;
 
+/*
     for(i=0; i<3; i++) {
       LSM6DS33::readAccel();
       d_accel[0] += LSM6DS33::ax - i_accel[0];
@@ -50,8 +57,10 @@ void Sensor::calcAngle() {
     accel[0] = d_accel[0] / 3;
     accel[1] = d_accel[1] / 3;
     accel[2] = d_accel[2] / 3;
-
-
+*/
+    accel[0] = LSM6DS33::ax - i_accel[0];
+    accel[1] = LSM6DS33::ay - i_accel[1];
+    accel[2] = LSM6DS33::az;
     gyro[0] = LSM6DS33::gx - i_gyro[0];
     gyro[1] = LSM6DS33::gy - i_gyro[1];
     gyro[2] = LSM6DS33::gz - i_gyro[2];
@@ -61,7 +70,11 @@ void Sensor::calcAngle() {
     }
     //-------------------------- Angle Orientation with Madgwick Filter --------------------------------------------------------------
     Madgwick::updateIMU(gyro[0], gyro[1], gyro[2], accel[0], accel[1], accel[2]);
-    
+/*    
+    angle[0] = Madgwick::getPitch() - i_angle[0];
+    angle[1] = Madgwick::getRoll() - i_angle[1];
+    angle[2] = Madgwick::getYaw() - i_angle[2];
+*/
     t_roll[cnt] = Madgwick::getRoll();
     t_pitch[cnt] = Madgwick::getPitch();
     t_yaw[cnt] = Madgwick::getYaw();

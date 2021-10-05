@@ -13,7 +13,7 @@ asm(".global _printf_float");
 
 int whole_count;
 unsigned int angleTimer;
-float throttle = 1300.0f;
+float throttle = 1200.0f;
 float PID_value;
 float throttle_low;
 float pwmval;
@@ -38,15 +38,16 @@ int main() {
     //printf("%d\n", angleTimer);
     
     angle.calcAngle();
-    angleTimer = angle_timer.read_us();
+    //angleTimer = angle_timer.read_us();
     //printf("%d\n", angleTimer);
 
 
-    // PID Process (float Kp, float Ki, float Kd, float tSample, float inputMin, float inputMax, float outputMin, float outputMax, float setpoint)
-    PID_c.PID_setParameter(2.55f, 0.0f, 0.0f, 0.001f, -30.00f, 30.00f, -40.0f, 40.0f, 0.0f);
+    // PID Process (float Kp, float Ki, float Kd, float inputMin, float inputMax, float outputMin, float outputMax, float setpoint)
+    PID_c.PID_setParameter(40.0f, 100.0f, 1.0f, -20.00f, 20.00f, 0.0f, 40.0f, 0.01f);
     PID_value = PID_c.PID_velocity_process(angle.angle[1]);
     if((int)PID_value%4 >1) PID_value -= (int)PID_value%4;
-
+    if(angle.angle[1] > 0.0f) PID_value *= -1.0f;
+    printf("%.3f\n", PID_value);
     ESC1_output.ESC1_output(PID_value);
     ESC2_output.ESC2_output(PID_value);
 /*

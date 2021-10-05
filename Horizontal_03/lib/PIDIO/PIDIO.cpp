@@ -4,11 +4,11 @@
 
 
 
-PIDIO::PIDIO() : PID(1.0f, 0.1f, 0.1f, 0.001f) {
+PIDIO::PIDIO() : PID(1.0f, 0.1f, 0.1f, 0.01f) {
 }
 
 /*Set Parameter (float Kp, float Ki, float Kd, float tSample, float inputMin, float inputMax, float outputMin, float outputMax, float setpoint)*/
-void PIDIO::PID_setParameter(float Kp, float Ki, float Kd, float tSample, float inputMin, float inputMax, float outputMin, float outputMax, float setpoint) {
+void PIDIO::PID_setParameter(float Kp, float Ki, float Kd, float inputMin, float inputMax, float outputMin, float outputMax, float setpoint) {
     PID::setInputLimits(inputMin, inputMax);
     PID::setOutputLimits(outputMin, outputMax);
     PID::setGain(Kp, Ki, Kd);

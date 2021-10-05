@@ -19,6 +19,7 @@ class Sensor: public LSM6DS33, public Madgwick {
         float i_gyro[3] = {};
         float accel[3] = {};
         float gyro[3] = {};
+        float i_angle[3] = {};
         float angle[3] = {};
         Sensor(void);
         void Preprocess(void);
