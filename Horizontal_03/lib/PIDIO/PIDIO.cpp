@@ -4,7 +4,7 @@
 
 
 
-PIDIO::PIDIO() : PID(1.0f, 0.1f, 0.1f, 0.01f) {
+PIDIO::PIDIO() : PID(1.0f, 0.1f, 0.1f, 0.03f) {
 }
 
 /*Set Parameter (float Kp, float Ki, float Kd, float tSample, float inputMin, float inputMax, float outputMin, float outputMax, float setpoint)*/
