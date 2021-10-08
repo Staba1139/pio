@@ -13,6 +13,7 @@ class Sensor: public LSM6DS33, public Madgwick {
         int cnt;
         float t_roll[aveNum], t_pitch[aveNum], t_yaw[aveNum];
         float o_angle[3] = {};
+        float invNorm;
 
     public:
         float i_accel[3] = {};

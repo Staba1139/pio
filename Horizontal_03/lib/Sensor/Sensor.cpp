@@ -6,7 +6,7 @@
 
 
 Sensor::Sensor() : LSM6DS33(p9, p10, LSM6DS33_AG_I2C_ADDR(1)) , Madgwick(){
-    LSM6DS33::begin(LSM6DS33::G_SCALE_245DPS, LSM6DS33::A_SCALE_2G, LSM6DS33::G_ODR_104, LSM6DS33::A_ODR_104);
+    LSM6DS33::begin(LSM6DS33::G_SCALE_500DPS, LSM6DS33::A_SCALE_4G, LSM6DS33::G_ODR_104, LSM6DS33::A_ODR_104);
 }
 
 void Sensor::Preprocess(void) {
@@ -30,6 +30,9 @@ void Sensor::Preprocess(void) {
     i_gyro[0] *= 0.2f;
     i_gyro[1] *= 0.2f;
     i_gyro[2] *= 0.2f;
+
+    invNorm = Madgwick::invSqrt(i_accel[0] * i_accel[0] + i_accel[1] * i_accel[1] + i_accel[2] * i_accel[2]);
+    for(i=0;i<3;++i) i_accel[i] *= invNorm;
 
     
     Madgwick::updateIMU(i_gyro[0], i_gyro[1], i_gyro[2], i_accel[0], i_accel[1], i_accel[2]);
@@ -64,6 +67,10 @@ void Sensor::calcAngle() {
     gyro[0] = LSM6DS33::gx - i_gyro[0];
     gyro[1] = LSM6DS33::gy - i_gyro[1];
     gyro[2] = LSM6DS33::gz - i_gyro[2];
+
+    invNorm = Madgwick::invSqrt(accel[0] * accel[0] + accel[1] * accel[1] + accel[2] * accel[2]);
+    for(i=0;i<3;++i) accel[i] *= invNorm;
+
 
     if(cnt == aveNum) {
       cnt = 0;
