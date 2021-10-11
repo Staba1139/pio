@@ -65,14 +65,14 @@ int main() {
       PID_value = 0.0f;
     }
     else if(abs(angle.angle[1]) > 20.0f) {
-      PID_c.PID_setParameter(4.0f, 0.0f, 0.0f, -40.00f, 40.00f, -50.0f, 50.0f, 0.0f);
+      PID_c.PID_setParameter(2.0f, 0.0f, 0.0f, -40.00f, 40.00f, -50.0f, 50.0f, 0.0f);
       PID_value = PID_c.PID_velocity_process(angle.angle[1]);
     }
     else {
       PID_c.PID_setParameter(2.0f, 0.0f, 0.0f, -20.00f, 20.00f, -100.0f, 100.0f, 0.0f);
       angle_velo_ref = PID_c.PID_velocity_process(angle.angle[1]);
 
-      PID_c.PID_setParameter(5.0f, 25.0f, 35.0f, -100.0f, 100.0f, -24.0f, 24.0f, angle_velo_ref);
+      PID_c.PID_setParameter(5.0f, 25.0f, 50.0f, -100.0f, 100.0f, -24.0f, 24.0f, angle_velo_ref);
       PID_value = PID_c.PID_velocity_process(angle.gyro[1]);
       if((int)PID_value%4 >1) PID_value -= (int)PID_value%4;
     }
