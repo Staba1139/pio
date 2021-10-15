@@ -23,12 +23,7 @@ float angle_velo_ref;
 float PID_value;
 float throttle_low;
 float pwmval;
-float kp1, ki1, kd1;
-float kp2, ki2, kd2;
-float outmin1, outmax1;
-float inmin1, inmax1;
-float outmin2, outmax2;
-float inmin2, inmax2;
+float angleAbs;
 
 
 int main() {
@@ -54,7 +49,16 @@ int main() {
     //angleTimer = angle_timer.read_us();
     //printf("%d\n", angleTimer);
 
+    if(abs(angle.angle[1]) < 0.8f) {
+      PID_value = 0.0f;
+    }
+    else {
+      angleAbs = abs(angle.angle[1]);
+      PID_c.PID_setParameter(5.0f, 25.0f, 50.0f, -1.0f*angleAbs, angleAbs, -2.0f*angleAbs, 2.0f*angleAbs, 0.0f);
+      PID_value = PID_c.PID_velocity_process(angle.angle[1]);
+    }
 
+/*
     if(abs(angle.angle[1]) < 0.8f) {
       PID_value = 0.0f;
     }
@@ -78,7 +82,7 @@ int main() {
       PID_value = PID_c.PID_velocity_process(angle.angle[1]);
       if((int)PID_value%4 >1) PID_value -= (int)PID_value%4;
     }
-
+*/
 
 
     angleTimer = angle_timer.read_us();
