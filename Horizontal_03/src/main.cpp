@@ -41,60 +41,23 @@ int main() {
   angle_timer.start();
 
   while(1) {
-    // Calcurate Angle
-    //angleTimer = angle_timer.read_us();
-    //printf("%d\n", angleTimer);
-    
     angle.calcAngle();
-    //angleTimer = angle_timer.read_us();
-    //printf("%d\n", angleTimer);
 
-    if(abs(angle.angle[1]) < 0.8f) {
+    if(abs(angle.angle[1]) < 0.5f) {
       PID_value = 0.0f;
     }
     else {
       angleAbs = abs(angle.angle[1]);
-      PID_c.PID_setParameter(5.0f, 25.0f, 50.0f, -1.0f*angleAbs, angleAbs, -2.0f*angleAbs, 2.0f*angleAbs, 0.0f);
+      PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs, angleAbs, -(-0.0004*pow(angleAbs, 3)+2.1f*angleAbs), -0.0004*pow(angleAbs, 3)+2.1f*angleAbs, 0.0f);
+      //PID_c.PID_setParameter(5.0f, 4.0f, 10.0f, -1.0f*angleAbs, angleAbs, -(0.0005*pow(angleAbs, 3)+0.74f*angleAbs), 0.0005*pow(angleAbs, 3)+0.74f*angleAbs, 0.0f);
       PID_value = PID_c.PID_velocity_process(angle.angle[1]);
     }
-
-/*
-    if(abs(angle.angle[1]) < 0.8f) {
-      PID_value = 0.0f;
-    }
-    else if(angle.angle[1] < -20.0f || angle.angle[1] > 20.0f) {
-      PID_c.PID_setParameter(5.0f, 25.0f, 50.0f, -40.00f, 40.00f, -40.0f, 40.0f, 0.0f);
-      PID_value = PID_c.PID_velocity_process(angle.angle[1]);
-    }
-    else if(angle.angle[1] < -10.0f || angle.angle[1] > 10.0f) {
-      PID_c.PID_setParameter(5.0f, 25.0f, 50.0f, -20.00f, 20.00f, -32.0f, 32.0f, 0.0f);
-      PID_value = PID_c.PID_velocity_process(angle.angle[1]);
-    }
-    else if(angle.angle[1] < -5.0f || angle.angle[1] > 5.0f) {
-      PID_c.PID_setParameter(5.0f, 25.0f, 50.0f, -10.00f, 10.00f, -20.0f, 20.0f, 0.0f);
-      PID_value = PID_c.PID_velocity_process(angle.angle[1]);
-    }
-    else {
-      //PID_c.PID_setParameter(2.0f, 0.0f, 0.0f, -20.00f, 20.00f, -100.0f, 100.0f, 0.0f);
-      //angle_velo_ref = PID_c.PID_velocity_process(angle.angle[1]);
-
-      PID_c.PID_setParameter(5.0f, 25.0f, 50.0f, -5.0f, 5.0f, -8.0f, 8.0f, 0.0f);
-      PID_value = PID_c.PID_velocity_process(angle.angle[1]);
-      if((int)PID_value%4 >1) PID_value -= (int)PID_value%4;
-    }
-*/
-
 
     angleTimer = angle_timer.read_us();
-    //printf("%d\n", angleTimer);
-
     //printf("%d,%.3f\n", angleTimer, PID_value);
     ESC1_output.ESC1_output(PID_value);
     ESC2_output.ESC2_output(PID_value);
-/*
-    m1.pulsewidth_us((int)(throttle + PID_value));
-    m2.pulsewidth_us((int)(throttle - PID_value));
-*/
+
 //    if(whole_count >= 1) {
       printf(",%d,%.2f\n", angleTimer, angle.angle[1]);
       //printf(",%.2f,%.2f\n", angle.gyro[0], angle.gyro[1]);

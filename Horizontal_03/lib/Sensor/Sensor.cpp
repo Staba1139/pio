@@ -63,7 +63,7 @@ void Sensor::calcAngle() {
 */
     accel[0] = LSM6DS33::ax - i_accel[0];
     accel[1] = LSM6DS33::ay - i_accel[1];
-    accel[2] = LSM6DS33::az;
+    accel[2] = LSM6DS33::az - i_accel[2]+1.0f;
     gyro[0] = LSM6DS33::gx - i_gyro[0];
     gyro[1] = LSM6DS33::gy - i_gyro[1];
     gyro[2] = LSM6DS33::gz - i_gyro[2];
