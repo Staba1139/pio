@@ -48,7 +48,7 @@ int main() {
     }
     else {
       angleAbs = abs(angle.angle[1]);
-      PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs, angleAbs, -(-0.0004*pow(angleAbs, 3)+2.1f*angleAbs), -0.0004*pow(angleAbs, 3)+2.1f*angleAbs, 0.0f);
+      PID_c.PID_setParameter(4.0f, 25.0f, 100.0f, -1.0f*angleAbs, angleAbs, -(-0.0004*pow(angleAbs, 3)+2.1f*angleAbs), -0.0004*pow(angleAbs, 3)+2.1f*angleAbs, 0.0f);
       //PID_c.PID_setParameter(5.0f, 4.0f, 10.0f, -1.0f*angleAbs, angleAbs, -(0.0005*pow(angleAbs, 3)+0.74f*angleAbs), 0.0005*pow(angleAbs, 3)+0.74f*angleAbs, 0.0f);
       PID_value = PID_c.PID_velocity_process(angle.angle[1]);
     }
@@ -66,7 +66,10 @@ int main() {
       whole_count = 0;
 //    }
 
-    if(angleTimer >=4294967294) angleTimer = 0;
+    if(angleTimer >=4294967294) {
+      angle_timer.reset();
+      angleTimer = 0;
+    }
     whole_count++;
     //wait_us(100);
   }
