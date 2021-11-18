@@ -8,6 +8,8 @@ PIDIO PID_c;
 Timer angle_timer;
 ESCout1 ESC1_output;
 ESCout2 ESC2_output;
+ESCout3 ESC3_output;
+ESCout4 ESC4_output;
 DigitalOut light01(LED1);
 DigitalOut light02(LED2);
 DigitalOut light03(LED3);
@@ -21,10 +23,12 @@ int whole_count;
 unsigned int angleTimer;
 float throttle = 1200.0f;
 float angle_velo_ref;
-float PID_value;
+float PID_value_0;
+float PID_value_1;
 float throttle_low;
 float pwmval;
-float angleAbs;
+float angleAbs_0;
+float angleAbs_1;
 
 
 int main() {
@@ -44,24 +48,38 @@ int main() {
   while(1) {
     angle.calcAngle();
 
-    if(abs(angle.angle[1]) < 0.5f) {
-      PID_value = 0.0f;
+    //angle[0] ....> 1+2 vs 3+4
+    //angle[1] ....> 1+4 vs 2+3
+
+    if(abs(angle.angle[1]) < 0.2f) {
+      PID_value_1 = 0.0f;
+    }
+    if(abs(angle.angle[0]) < 0.2f) {
+      PID_value_0 = 0.0f;
     }
     else {
-      angleAbs = abs(angle.angle[1]);
-      PID_c.PID_setParameter(4.0f, 1.5f, 40.0f, -1.0f*angleAbs, angleAbs, -(-0.0004*pow(angleAbs, 3)+2.1f*angleAbs), -0.0004*pow(angleAbs, 3)+2.1f*angleAbs, 0.0f);
-      //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs, angleAbs, -(0.0005*pow(angleAbs, 3)+0.74f*angleAbs), 0.0005*pow(angleAbs, 3)+0.74f*angleAbs, 0.0f);
-      //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs, angleAbs, -2.1f*angleAbs, 2.1f*angleAbs, 0.0f);
-      PID_value = PID_c.PID_velocity_process(angle.angle[1]);
+      angleAbs_0 = abs(angle.angle[0]);
+      angleAbs_1 = abs(angle.angle[1]);
+      PID_c.PID_setParameter(4.0f, 1.5f, 40.0f, -1.0f*angleAbs_0, angleAbs_0, -(-0.0004*pow(angleAbs_0, 3)+2.1f*angleAbs_0), -0.0004*pow(angleAbs_0, 3)+2.1f*angleAbs_0, 0.0f);
+      PID_value_0 = PID_c.PID_velocity_process(angle.angle[0]);
+      PID_c.PID_setParameter(4.0f, 1.5f, 40.0f, -1.0f*angleAbs_1, angleAbs_1, -(-0.0004*pow(angleAbs_1, 3)+2.1f*angleAbs_1), -0.0004*pow(angleAbs_1, 3)+2.1f*angleAbs_1, 0.0f);
+      PID_value_1 = PID_c.PID_velocity_process(angle.angle[1]);
+      
+      //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs_1, angleAbs_1, -(0.0005*pow(angleAbs_1, 3)+0.74f*angleAbs_1), 0.0005*pow(angleAbs_1, 3)+0.74f*angleAbs_1, 0.0f);
+      //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs_1, angleAbs_1, -2.1f*angleAbs_1, 2.1f*angleAbs_1, 0.0f);
+      
+
     }
 
     angleTimer = angle_timer.read_us();
-    //printf("%d,%.3f\n", angleTimer, PID_value);
-    ESC1_output.ESC1_output(PID_value);
-    ESC2_output.ESC2_output(PID_value);
+    //printf("%d,%.3f\n", angleTimer, PID_value_1);
+    ESC1_output.ESC1_output(PID_value_0, PID_value_1);
+    ESC2_output.ESC2_output(PID_value_0, PID_value_1);
+    ESC3_output.ESC3_output(PID_value_0, PID_value_1);
+    ESC4_output.ESC4_output(PID_value_0, PID_value_1);
 
 //    if(whole_count >= 1) {
-      device.printf(",%d,%.2f\n", angleTimer, angle.angle[1]);
+      device.printf("%d,%.2f,%.2f\n", angleTimer, angle.angle[0], angle.angle[1]);
       //printf(",%.2f,%.2f\n", angle.gyro[0], angle.gyro[1]);
       //printf("%d,%.2f,%.2f,%.2f\n", angleTimer, angle.accel[0], angle.accel[1], angle.accel[2]);
       //printf("%d,%.5f,%.5f\n", angleTimer, angle.gyro[0], angle.gyro[1]);
