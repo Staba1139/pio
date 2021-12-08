@@ -49,7 +49,7 @@ int main() {
     }
     else {
       angleAbs = abs(angle.angle[1]);
-      PID_c.PID_setParameter(4.0f, 1.5f, 40.0f, -1.0f*angleAbs, angleAbs, -(-0.0004*pow(angleAbs, 3)+2.1f*angleAbs), -0.0004*pow(angleAbs, 3)+2.1f*angleAbs, 0.0f);
+      PID_c.PID_setParameter(4.0f, 1.0f, 40.0f, -1.0f*angleAbs, angleAbs, -(-0.0004*pow(angleAbs, 3)+2.1f*angleAbs), -0.0004*pow(angleAbs, 3)+2.1f*angleAbs, 0.0f);
       //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs, angleAbs, -(0.0005*pow(angleAbs, 3)+0.74f*angleAbs), 0.0005*pow(angleAbs, 3)+0.74f*angleAbs, 0.0f);
       //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs, angleAbs, -2.1f*angleAbs, 2.1f*angleAbs, 0.0f);
       PID_value = PID_c.PID_velocity_process(angle.angle[1]);
@@ -61,7 +61,7 @@ int main() {
     ESC2_output.ESC2_output(PID_value);
 
 //    if(whole_count >= 1) {
-      device.printf(",%d,%.2f\n", angleTimer, angle.angle[1]);
+      printf(",%d,%.2f\n", angleTimer, angle.angle[1]);
       //printf(",%.2f,%.2f\n", angle.gyro[0], angle.gyro[1]);
       //printf("%d,%.2f,%.2f,%.2f\n", angleTimer, angle.accel[0], angle.accel[1], angle.accel[2]);
       //printf("%d,%.5f,%.5f\n", angleTimer, angle.gyro[0], angle.gyro[1]);

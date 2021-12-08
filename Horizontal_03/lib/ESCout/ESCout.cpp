@@ -2,7 +2,7 @@
 #include "mbed.h"
 
 ESCout1::ESCout1() : PwmOut(p26) {
-    throttle = 1276.0f;
+    throttle = 1300.0f;
     throttle_low = 0.001f;
     pwmval = 0.004f;
     PID_value = 0.0f;
