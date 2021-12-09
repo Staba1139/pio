@@ -57,13 +57,25 @@ int main() {
     if(abs(angle.angle[0]) < 0.2f) {
       PID_value_0 = 0.0f;
     }
+    if(angle.angle[0] > 10.0f) {
+      PID_value_0 = 20.0f;
+    }
+    if(angle.angle[0] < -10.0f) {
+      PID_value_0 = -20.0f;
+    }
+    if(angle.angle[1] > 10.0f) {
+      PID_value_1 = 20.0f;
+    }
+    if(angle.angle[1] < -10.0f) {
+      PID_value_1 = -20.0f;
+    }
     else {
       angleAbs_0 = abs(angle.angle[0]);
       angleAbs_1 = abs(angle.angle[1]);
-      PID_c.PID_setParameter(1.0f, 0.5f, 1.0f, -1.0f*angleAbs_0, angleAbs_0, -(-0.0004*pow(angleAbs_0, 3)+2.1f*angleAbs_0), -0.0004*pow(angleAbs_0, 3)+2.1f*angleAbs_0, 0.0f);
-      PID_value_0 = PID_c.PID_velocity_process(angle.angle[0]);
-      PID_c.PID_setParameter(1.0f, 0.5f, 1.0f, -1.0f*angleAbs_1, angleAbs_1, -(-0.0004*pow(angleAbs_1, 3)+2.1f*angleAbs_1), -0.0004*pow(angleAbs_1, 3)+2.1f*angleAbs_1, 0.0f);
-      PID_value_1 = PID_c.PID_velocity_process(angle.angle[1]);
+      PID_c.PID_setParameter(5.0f, 2.0f, 40.0f, -1.0f*angleAbs_0, angleAbs_0, -(-0.01*pow(angleAbs_0, 3)+3.0f*angleAbs_0), -0.01*pow(angleAbs_0, 3)+3.0f*angleAbs_0, 0.0f);
+      PID_value_0 = PID_c.PID_process(angle.angle[0]);
+      PID_c.PID_setParameter(5.0f, 2.0f, 40.0f, -1.0f*angleAbs_1, angleAbs_1, -(-0.01*pow(angleAbs_1, 3)+3.0f*angleAbs_1), -0.01*pow(angleAbs_1, 3)+3.0f*angleAbs_1, 0.0f);
+      PID_value_1 = PID_c.PID_process(angle.angle[1]);
       
       //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs_1, angleAbs_1, -(0.0005*pow(angleAbs_1, 3)+0.74f*angleAbs_1), 0.0005*pow(angleAbs_1, 3)+0.74f*angleAbs_1, 0.0f);
       //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs_1, angleAbs_1, -2.1f*angleAbs_1, 2.1f*angleAbs_1, 0.0f);
