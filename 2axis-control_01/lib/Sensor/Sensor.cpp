@@ -6,7 +6,7 @@
 
 
 Sensor::Sensor() : LSM6DS33(p9, p10, LSM6DS33_AG_I2C_ADDR(1)) , Madgwick(){
-    LSM6DS33::begin(LSM6DS33::G_SCALE_245DPS, LSM6DS33::A_SCALE_2G, LSM6DS33::G_ODR_104, LSM6DS33::A_ODR_104);
+    LSM6DS33::begin(LSM6DS33::G_SCALE_245DPS, LSM6DS33::A_SCALE_4G, LSM6DS33::G_ODR_104, LSM6DS33::A_ODR_104);
 }
 
 void Sensor::Preprocess(void) {
@@ -94,9 +94,9 @@ void Sensor::calcAngle() {
       o_angle[2] += t_yaw[i];
     }
         
-    angle[0] = (o_angle[0] / aveNum);
-    angle[1] = (o_angle[1] / aveNum);
-    angle[2] = (o_angle[2] / aveNum);
+    angle[0] = (o_angle[0] / aveNum) - i_angle[0];
+    angle[1] = (o_angle[1] / aveNum) - i_angle[1];
+    angle[2] = (o_angle[2] / aveNum) - i_angle[2];
 
     if(angle[2] >180.0f) {
       angle[2] *=-1.0f;

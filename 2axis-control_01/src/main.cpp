@@ -20,6 +20,7 @@ Serial device(p13, p14);
 asm(".global _printf_float");
 
 int whole_count;
+int sensor_count;
 unsigned int angleTimer;
 float throttle = 1200.0f;
 float angle_velo_ref;
@@ -50,40 +51,33 @@ int main() {
 
     //angle[0] ....> 1+2 vs 3+4
     //angle[1] ....> 1+4 vs 2+3
-
-    if(abs(angle.angle[1]) < 0.2f) {
-      PID_value_1 = 0.0f;
-    }
-    if(abs(angle.angle[0]) < 0.2f) {
-      PID_value_0 = 0.0f;
-    }
-    if(angle.angle[0] > 10.0f) {
-      PID_value_0 = 20.0f;
-    }
-    if(angle.angle[0] < -10.0f) {
-      PID_value_0 = -20.0f;
-    }
-    if(angle.angle[1] > 10.0f) {
-      PID_value_1 = 20.0f;
-    }
-    if(angle.angle[1] < -10.0f) {
-      PID_value_1 = -20.0f;
-    }
-    else {
-      angleAbs_0 = abs(angle.angle[0]);
-      angleAbs_1 = abs(angle.angle[1]);
-      PID_c.PID_setParameter(5.0f, 2.0f, 40.0f, -1.0f*angleAbs_0, angleAbs_0, -(-0.01*pow(angleAbs_0, 3)+3.0f*angleAbs_0), -0.01*pow(angleAbs_0, 3)+3.0f*angleAbs_0, 0.0f);
-      PID_value_0 = PID_c.PID_process(angle.angle[0]);
-      PID_c.PID_setParameter(5.0f, 2.0f, 40.0f, -1.0f*angleAbs_1, angleAbs_1, -(-0.01*pow(angleAbs_1, 3)+3.0f*angleAbs_1), -0.01*pow(angleAbs_1, 3)+3.0f*angleAbs_1, 0.0f);
-      PID_value_1 = PID_c.PID_process(angle.angle[1]);
+    if(sensor_count >= 2){
+      if(abs(angle.angle[1]) < 0.2f) {
+       PID_value_1 = 0.0f;
+      }
+      if(abs(angle.angle[0]) < 0.2f) {
+        PID_value_0 = 0.0f;
+      }
+      else {
+        angleAbs_0 = abs(angle.angle[0]);
+        angleAbs_1 = abs(angle.angle[1]);
+        PID_c.PID_setParameter(4.0f, 1.0f, 40.0f, -1.0f*angleAbs_0, angleAbs_0, -(-0.0004*pow(angleAbs_0, 3) + 0.1f*angleAbs_0), -0.0004*pow(angleAbs_0, 3) + 0.1f*angleAbs_0, 0.0f);
+        PID_value_0 = PID_c.PID_process(angle.angle[0]);
+        PID_c.PID_setParameter(4.0f, 1.0f, 40.0f, -1.0f*angleAbs_1, angleAbs_1, -(-0.0004*pow(angleAbs_1, 3) + 0.1f*angleAbs_1), -0.0004*pow(angleAbs_1, 3) + 0.1f*angleAbs_1, 0.0f);
+        PID_value_1 = PID_c.PID_process(angle.angle[1]);
       
-      //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs_1, angleAbs_1, -(0.0005*pow(angleAbs_1, 3)+0.74f*angleAbs_1), 0.0005*pow(angleAbs_1, 3)+0.74f*angleAbs_1, 0.0f);
-      //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs_1, angleAbs_1, -2.1f*angleAbs_1, 2.1f*angleAbs_1, 0.0f);
+        //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs_1, angleAbs_1, -(0.0005*pow(angleAbs_1, 3)+0.74f*angleAbs_1), 0.0005*pow(angleAbs_1, 3)+0.74f*angleAbs_1, 0.0f);
+        //PID_c.PID_setParameter(4.0f, 25.0f, 70.0f, -1.0f*angleAbs_1, angleAbs_1, -2.1f*angleAbs_1, 2.1f*angleAbs_1, 0.0f);
       
 
+      }
+      angleTimer = angle_timer.read_us();
+      device.printf("%d,%.2f,%.2f,%.2f,%.2f\n", angleTimer, angle.angle[0], angle.angle[1],PID_value_0, PID_value_1);
+      sensor_count = 0;  
     }
+    
 
-    angleTimer = angle_timer.read_us();
+    
     //printf("%d,%.3f\n", angleTimer, PID_value_1);
     ESC1_output.ESC1_output(PID_value_0, PID_value_1);
     ESC2_output.ESC2_output(PID_value_0, PID_value_1);
@@ -91,18 +85,19 @@ int main() {
     ESC4_output.ESC4_output(PID_value_0, PID_value_1);
 
 //    if(whole_count >= 1) {
-      device.printf("%d,%.2f,%.2f\n", angleTimer, angle.angle[0], angle.angle[1]);
+      
       //printf(",%.2f,%.2f\n", angle.gyro[0], angle.gyro[1]);
       //printf("%d,%.2f,%.2f,%.2f\n", angleTimer, angle.accel[0], angle.accel[1], angle.accel[2]);
       //printf("%d,%.5f,%.5f\n", angleTimer, angle.gyro[0], angle.gyro[1]);
-      whole_count = 0;
+      //whole_count = 0;
 //    }
-
+    
     if(angleTimer >=4294967294) {
       angle_timer.reset();
       angleTimer = 0;
     }
-    whole_count++;
-    //wait_us(100);
+    sensor_count++;
+
+    //wait_us(300000);
   }
 }
