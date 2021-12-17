@@ -1,4 +1,5 @@
 #include "ultrasonic.h"
+#include "mbed.h"
 
 DigitalOut USSTrigger(p11);
 Timer ActiveTime;
