@@ -12,7 +12,7 @@ class ESCout1 : public PwmOut {
         float throttle;
         ESCout1(void);
         ~ESCout1();
-        void ESC1_output(float PID_value_0, float PID_value_1);
+        void ESC1_output(float PID_value_0, float PID_value_1, float thrust_o);
 };
 
 class ESCout2 : public PwmOut {
@@ -25,7 +25,7 @@ class ESCout2 : public PwmOut {
         float throttle;
         ESCout2(void);
         ~ESCout2();
-        void ESC2_output(float PID_value_0, float PID_value_1);
+        void ESC2_output(float PID_value_0, float PID_value_1, float thrust_o);
 };
 
 class ESCout3 : public PwmOut {
@@ -38,7 +38,7 @@ class ESCout3 : public PwmOut {
         float throttle;
         ESCout3(void);
         ~ESCout3();
-        void ESC3_output(float PID_value_0, float PID_value_1);
+        void ESC3_output(float PID_value_0, float PID_value_1, float thrust_o);
 };
 
 class ESCout4 : public PwmOut {
@@ -51,7 +51,7 @@ class ESCout4 : public PwmOut {
         float throttle;
         ESCout4(void);
         ~ESCout4();
-        void ESC4_output(float PID_value_0, float PID_value_1);
+        void ESC4_output(float PID_value_0, float PID_value_1, float thrust_o);
 };
 
 #endif
