@@ -61,17 +61,17 @@ ESCout4::~ESCout4() {
     //angle[1] ....> 1+4 (+) vs 2+3 (-)
 
 void ESCout1::ESC1_output(float PID_value_0, float PID_value_1, float thrust_o) {
-    PwmOut::pulsewidth_us((int)(996.0f + thrust_o + (PID_value_0 + PID_value_1)));
+    PwmOut::pulsewidth_us((int)(thrust_o + (PID_value_0 + PID_value_1)));
 }
 
 void ESCout2::ESC2_output(float PID_value_0, float PID_value_1, float thrust_o) {
-    PwmOut::pulsewidth_us((int)(996.0f + thrust_o + (PID_value_0 - PID_value_1)));
+    PwmOut::pulsewidth_us((int)(thrust_o + (PID_value_0 - PID_value_1)));
 }
 
 void ESCout3::ESC3_output(float PID_value_0, float PID_value_1, float thrust_o) {
-    PwmOut::pulsewidth_us((int)(1000.0f + thrust_o - (PID_value_0 + PID_value_1)));
+    PwmOut::pulsewidth_us((int)(thrust_o - (PID_value_0 + PID_value_1)));
 }
 
 void ESCout4::ESC4_output(float PID_value_0, float PID_value_1, float thrust_o) {
-    PwmOut::pulsewidth_us((int)(1000.0f + thrust_o - (PID_value_0 - PID_value_1)));
+    PwmOut::pulsewidth_us((int)(thrust_o - (PID_value_0 - PID_value_1)));
 }
