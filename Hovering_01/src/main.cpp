@@ -67,7 +67,7 @@ int main() {
 
         //angle[0] ....> 1+2 vs 3+4
         //angle[1] ....> 1+4 vs 2+3
-      
+    if(sensor_count >= 6){  
       if(abs(angle.angle[1]) < 0.2f) {
        PID_value_1 = 0.0f;
       }
@@ -86,7 +86,7 @@ int main() {
       angleTimer = angle_timer.read_us();
       device.printf("%d,%.2f,%.2f,%.2f,%.2f,%.2f\n", angleTimer, angle.angle[0], angle.angle[1],PID_value_0, PID_value_1, current_height);
       //sensor_count = 0;  
-    
+    }
     if(whole_count >= 10) {
       
       //printf(",%.2f,%.2f\n", angle.gyro[0], angle.gyro[1]);
